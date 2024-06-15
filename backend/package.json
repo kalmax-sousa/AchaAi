@@ -3,16 +3,27 @@
   "version": "1.0.0",
   "description": "",
   "main": "app.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "node --watch --no-warnings app.js"
+    "dev": "node --experimental-modules --watch --no-warnings src/server.js",
+    "lint": "eslint . --config eslint.config.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
+    "ora": "^8.0.1",
     "pg": "^8.11.5",
     "sequelize": "^6.37.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.4.0",
+    "eslint": "^9.4.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.1.3",
+    "globals": "^15.3.0",
+    "prettier": "^3.3.1"
   }
 }

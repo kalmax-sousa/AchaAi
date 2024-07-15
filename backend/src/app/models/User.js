@@ -19,9 +19,18 @@ class User extends Model {
         password_hash: {
           type: Sequelize.STRING,
         },
+        enrollment: {
+          type: Sequelize.STRING,
+          allowNull: true,
+        },
+        image_url: {
+          type: Sequelize.STRING,
+          allowNull: true,
+        },
         admin: {
           type: Sequelize.BOOLEAN,
           defaultValue: false,
+          allowNull: false,
         },
       },
       {

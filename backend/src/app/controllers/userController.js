@@ -1,10 +1,17 @@
 import User from "../models/User.js";
+import UserDTO from "../dto/UserDTO.js";
+import * as yup from "yup";
 
 class UserController {
   async getAll(req, res) {
     try {
       const Users = await User.findAll();
-      res.json(Users);
+
+      const UsersDTO = Users.map((user) => {
+        return new UserDTO(user);
+      });
+
+      res.json(UsersDTO);
     } catch (error) {
       res.status(500).json({ message: "Server Error: " + error });
     }
@@ -48,15 +55,36 @@ class UserController {
 
   async createUser(req, res) {
     try {
-      const { name, email, password } = req.body;
-      const createResult = await User.create({
-        name,
-        email,
-        password_hash: password,
+      const schema = yup.object().shape({
+        name: yup.string().required("Nome é obrigatório!"),
+        email: yup
+          .string()
+          .email("Email deve ser valido. Ex: meu_email@exemplo.com")
+          .required("Email é obrigatório!"),
+        password: yup
+          .string()
+          .min(8, "Senha deve ter pelo menos 8 caracteres")
+          .max(32, "Senha deve ter no maximo 32 caracteres")
+          .required("Senha é obrigatória!"),
       });
-      res.json(createResult);
+
+      await schema.validate(req.body, { abortEarly: false });
+
+      if (await User.findOne({ where: { email: req.body.email } })) {
+        return res.status(400).json({ message: "Email já existente!" });
+      }
+      const createResult = await User.create(req.body);
+      const createdUser = new UserDTO(createResult);
+
+      res.json(createdUser);
     } catch (error) {
-      res.status(500).json({ message: "Server Error " + error });
+      if (error instanceof yup.ValidationError) {
+        res
+          .status(400)
+          .json({ message: "Dados inválidos!", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Server Error " + error });
+      }
     }
   }
 

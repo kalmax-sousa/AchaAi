@@ -34,7 +34,7 @@ class SessionController {
         image_url,
         admin,
       },
-      token: jwt.sign({ id }, authConfig.secret, {
+      token: jwt.sign({ id, admin }, authConfig.secret, {
         expiresIn: authConfig.expiresIn,
       }),
     });

@@ -13,7 +13,7 @@ class UserController {
 
       res.json(UsersDTO);
     } catch (error) {
-      res.status(500).json({ message: "Server Error: " + error });
+      res.status(500).json({ message: "Erro no servidor: " + error });
     }
   }
 
@@ -26,7 +26,7 @@ class UserController {
 
       res.json(user);
     } catch (error) {
-      res.status(500).json({ message: "Server Error " + error });
+      res.status(500).json({ message: "Erro no servidor: " + error });
     }
   }
 
@@ -60,7 +60,7 @@ class UserController {
           .status(400)
           .json({ message: "Dados inválidos!", errors: error.errors });
       } else {
-        res.status(500).json({ message: "Server Error " + error });
+        res.status(500).json({ message: "Erro no servidor: " + error });
       }
     }
   }
@@ -71,7 +71,8 @@ class UserController {
 
       const user = await User.findByPk(req.params.id);
 
-      if (!user) return res.status(404).json({ message: "User not found" });
+      if (!user)
+        return res.status(404).json({ message: "Usuario nao encontrado" });
 
       user.name = name ?? user.name;
       user.email = email ?? user.email;
@@ -81,7 +82,7 @@ class UserController {
 
       res.json(updatedUser);
     } catch (error) {
-      res.status(500).json({ message: "Server Error " + error });
+      res.status(500).json({ message: "Erro no servidor: " + error });
     }
   }
 
@@ -91,7 +92,8 @@ class UserController {
 
       const user = await User.findByPk(req.params.id);
 
-      if (!user) return res.status(404).json({ message: "User not found" });
+      if (!user)
+        return res.status(404).json({ message: "Usuario nao encontrado" });
 
       user.password = password ?? user.password;
 
@@ -99,7 +101,7 @@ class UserController {
 
       res.json(updatedUser);
     } catch (error) {
-      res.status(500).json({ message: "Server Error " + error });
+      res.status(500).json({ message: "Erro no servidor: " + error });
     }
   }
 
@@ -107,13 +109,14 @@ class UserController {
     try {
       const user = await User.findByPk(req.params.id);
 
-      if (!user) return res.status(404).json({ message: "User not found" });
+      if (!user)
+        return res.status(404).json({ message: "Usuario nao encontrado" });
 
       User.destroy({ where: { id: req.params.id } });
 
-      res.json({ message: "User removed" });
+      res.json({ message: "Usuario deletado com sucesso" });
     } catch (error) {
-      res.status(500).json({ message: "Server Error: " + error });
+      res.status(500).json({ message: "Erro no servidor: " + error });
     }
   }
 }

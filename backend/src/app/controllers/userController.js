@@ -21,33 +21,10 @@ class UserController {
     try {
       const user = await User.findByPk(req.params.id);
 
-      if (!user) return res.status(404).json({ message: "User not found" });
+      if (!user)
+        return res.status(404).json({ message: "Usuario nao encontrado" });
 
       res.json(user);
-    } catch (error) {
-      res.status(500).json({ message: "Server Error " + error });
-    }
-  }
-
-  async getUserName(req, res) {
-    try {
-      const user = await User.findByPk(req.params.id);
-
-      if (!user) return res.status(404).json({ message: "User not found" });
-
-      res.json(user.name);
-    } catch (error) {
-      res.status(500).json({ message: "Server Error " + error });
-    }
-  }
-
-  async getUserEmail(req, res) {
-    try {
-      const user = await User.findByPk(req.params.id);
-
-      if (!user) return res.status(404).json({ message: "User not found" });
-
-      res.json(user.email);
     } catch (error) {
       res.status(500).json({ message: "Server Error " + error });
     }

@@ -1,6 +1,11 @@
-import User from "../models/User.js";
-import UserDTO from "../dto/UserDTO.js";
 import * as yup from "yup";
+import crypto from "crypto";
+
+import User from "../models/User.js";
+import UserConfirmation from "../models/UserConfirmation.js";
+import UserDTO from "../dto/UserDTO.js";
+
+import MailProvider from "../../app/providers/MailProvider.js";
 
 class UserController {
   async getAll(req, res) {
@@ -16,7 +21,6 @@ class UserController {
       res.status(500).json({ message: "Erro no servidor: " + error });
     }
   }
-
   async getUser(req, res) {
     try {
       const user = await User.findByPk(req.params.id);
@@ -29,11 +33,11 @@ class UserController {
       res.status(500).json({ message: "Erro no servidor: " + error });
     }
   }
-
   async createUser(req, res) {
     try {
       const schema = yup.object().shape({
         name: yup.string().required("Nome é obrigatório!"),
+        enrollment: yup.string().required("Matricula é obrigatória!"),
         email: yup
           .string()
           .email("Email deve ser valido. Ex: meu_email@exemplo.com")
@@ -52,6 +56,24 @@ class UserController {
       }
       const createResult = await User.create(req.body);
       const createdUser = new UserDTO(createResult);
+
+      const confirmation = await UserConfirmation.create({
+        user_id: createdUser.id,
+        token: crypto.randomBytes(90).toString("base64"),
+      });
+
+      await MailProvider.sendMail(
+        {
+          name: createdUser.name,
+          email: createdUser.email,
+        },
+        "Ativação de conta",
+        {
+          name: createdUser.name,
+          email: createdUser.email,
+          token: confirmation.token,
+        },
+      );
 
       res.json(createdUser);
     } catch (error) {
@@ -86,22 +108,50 @@ class UserController {
     }
   }
 
-  async updateUserPassword(req, res) {
+  async recoverUserPassword(req, res) {
     try {
-      const { password } = req.body;
+      const schema = yup.object().shape({
+        password: yup
+          .string()
+          .min(8, "Senha deve ter pelo menos 8 caracteres")
+          .max(32, "Senha deve ter no maximo 32 caracteres")
+          .required("Senha é obrigatória!"),
+        password_confirmation: yup
+          .string()
+          .oneOf([yup.ref("password")], "Senhas devem ser iguais"),
+        token: yup.string().required("Token é obrigatório!"),
+      });
+      const { password, token } = req.body;
 
-      const user = await User.findByPk(req.params.id);
+      await schema.validate(req.body, { abortEarly: false });
+
+      const userConfirmation = await UserConfirmation.findOne({
+        where: { token, isPasswordRecovery: true },
+      });
+
+      if (!userConfirmation)
+        return res.status(404).json({ message: "Token invalido" });
+
+      const user = await User.findByPk(userConfirmation.user_id);
 
       if (!user)
         return res.status(404).json({ message: "Usuario nao encontrado" });
 
       user.password = password ?? user.password;
 
-      const updatedUser = await user.save();
+      await user.save();
 
-      res.json(updatedUser);
+      await userConfirmation.destroy();
+
+      res.status(204);
     } catch (error) {
-      res.status(500).json({ message: "Erro no servidor: " + error });
+      if (error instanceof yup.ValidationError) {
+        res
+          .status(400)
+          .json({ message: "Dados inválidos!", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Erro no servidor: " + error });
+      }
     }
   }
 

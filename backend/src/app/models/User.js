@@ -12,6 +12,10 @@ class User extends Model {
         email: {
           type: Sequelize.STRING,
           allowNull: false,
+          unique: true,
+          validate: {
+            isEmail: true,
+          },
         },
         password: {
           type: Sequelize.VIRTUAL,
@@ -26,6 +30,11 @@ class User extends Model {
         image_url: {
           type: Sequelize.STRING,
           allowNull: true,
+        },
+        verified: {
+          type: Sequelize.BOOLEAN,
+          defaultValue: false,
+          allowNull: false,
         },
         admin: {
           type: Sequelize.BOOLEAN,

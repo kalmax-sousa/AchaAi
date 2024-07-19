@@ -5,8 +5,9 @@ import User from "../app/models/User.js";
 import Item from "../app/models/Item.js";
 import Register from "../app/models/Register.js";
 import Category from "../app/models/Category.js";
+import UserConfirmation from "../app/models/UserConfirmation.js";
 
-const models = [User, Item, Register, Category];
+const models = [User, Item, Register, Category, UserConfirmation];
 
 class Database {
   constructor() {
@@ -25,7 +26,7 @@ class Database {
 
   async sync() {
     try {
-      await this.connection.sync();
+      await this.connection.sync(/* { force: true } */);
       console.log("Connection has been established successfully.");
     } catch (error) {
       console.error("Unable to connect to the database:", error);

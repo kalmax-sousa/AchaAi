@@ -17,6 +17,10 @@ class User extends Model {
             isEmail: true,
           },
         },
+        phonenumber: {
+          type: Sequelize.STRING,
+          allowNull: true,
+        },
         password: {
           type: Sequelize.VIRTUAL,
         },
@@ -26,6 +30,7 @@ class User extends Model {
         enrollment: {
           type: Sequelize.STRING,
           allowNull: true,
+          unique: true,
         },
         image_url: {
           type: Sequelize.STRING,

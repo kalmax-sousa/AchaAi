@@ -8,6 +8,14 @@ class Item extends Model {
           type: Sequelize.STRING,
           allowNull: false,
         },
+        location: {
+          type: Sequelize.STRING,
+          allowNull: false,
+        },
+        image_url: {
+          type: Sequelize.STRING,
+          allowNull: false,
+        },
         status: {
           type: Sequelize.ENUM,
           values: ["DELIVERED", "LOST_AND_FOUND", "WITH_FINDER"],
@@ -40,10 +48,12 @@ class Item extends Model {
   }
 
   static associate(models) {
-    this.hasOne(models.User, { foreignKey: "user_id", as: "user" });
-    this.hasMany(models.Category, {
+    this.belongsTo(models.User, { foreignKey: "user_id", as: "user" });
+    this.belongsToMany(models.Category, {
       foreignKey: "category_id",
       as: "category",
+      through: "item_category",
+      timestamps: false,
     });
   }
 }

@@ -26,7 +26,11 @@ class Database {
 
   async sync() {
     try {
-      await this.connection.sync(/* { force: true } */);
+      if (process.env.NODE_ENV === "dbclear") {
+        await this.connection.sync({ force: true });
+      } else {
+        await this.connection.sync();
+      }
       console.log("Connection has been established successfully.");
     } catch (error) {
       console.error("Unable to connect to the database:", error);

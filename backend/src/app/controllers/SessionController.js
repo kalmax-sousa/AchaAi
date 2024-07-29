@@ -27,7 +27,7 @@ class SessionController {
       return res.status(401).json({ error: "Email não encontrado." });
     }
     if (!(await user.checkPassword(password, user.password_hash))) {
-      return res.status(401).json({ error: "Senha incorreta." });
+      return res.status(401).json({ error: "Email e/ou senha invalidos." });
     }
 
     if (!user.verified) {

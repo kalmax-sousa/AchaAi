@@ -7,6 +7,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "node --experimental-modules --watch --no-warnings src/server.js",
+    "dbclear": "node src/database/index.js",
     "lint": "eslint . --config eslint.config.js"
   },
   "author": "",

@@ -34,6 +34,8 @@ class UserController {
     }
   }
   async createUser(req, res) {
+    const transaction = await User.sequelize.transaction();
+
     try {
       const schema = yup.object().shape({
         name: yup.string().required("Nome é obrigatório!"),
@@ -54,13 +56,21 @@ class UserController {
       if (await User.findOne({ where: { email: req.body.email } })) {
         return res.status(400).json({ message: "Email já existente!" });
       }
-      const createResult = await User.create(req.body);
+
+      if (await User.findOne({ where: { enrollment: req.body.enrollment } })) {
+        return res.status(400).json({ message: "Matricula ja existente!" });
+      }
+
+      const createResult = await User.create(req.body, { transaction });
       const createdUser = new UserDTO(createResult);
 
-      const confirmation = await UserConfirmation.create({
-        user_id: createdUser.id,
-        token: crypto.randomBytes(90).toString("base64"),
-      });
+      const confirmation = await UserConfirmation.create(
+        {
+          user_id: createdUser.id,
+          token: crypto.randomBytes(90).toString("base64"),
+        },
+        { transaction },
+      );
 
       await MailProvider.sendMail(
         {
@@ -75,8 +85,11 @@ class UserController {
         },
       );
 
+      await transaction.commit();
       res.json(createdUser);
     } catch (error) {
+      await transaction.rollback();
+
       if (error instanceof yup.ValidationError) {
         res
           .status(400)
@@ -109,6 +122,8 @@ class UserController {
   }
 
   async recoverUserPassword(req, res) {
+    const transaction = await User.sequelize.transaction();
+
     try {
       const schema = yup.object().shape({
         password: yup
@@ -139,12 +154,15 @@ class UserController {
 
       user.password = password ?? user.password;
 
-      await user.save();
+      await user.save({ transaction });
 
-      await userConfirmation.destroy();
+      await userConfirmation.destroy({ transaction });
 
+      await transaction.commit();
       res.status(204);
     } catch (error) {
+      await transaction.rollback();
+
       if (error instanceof yup.ValidationError) {
         res
           .status(400)

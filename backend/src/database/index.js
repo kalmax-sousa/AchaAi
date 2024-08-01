@@ -1,5 +1,7 @@
 import Sequelize from "sequelize";
+
 import databaseConfig from "../config/database.js";
+import superuserConfig from "../config/superuser.js";
 
 import User from "../app/models/User.js";
 import Item from "../app/models/Item.js";
@@ -13,6 +15,7 @@ class Database {
   constructor() {
     this.init();
     this.sync();
+    this.createSuperuser();
   }
 
   init() {
@@ -26,14 +29,33 @@ class Database {
 
   async sync() {
     try {
-      if (process.env.NODE_ENV === "dbclear") {
+      if (process.argv[2] === "dbclear") {
         await this.connection.sync({ force: true });
+        console.log("Database Cleared");
       } else {
         await this.connection.sync();
+        console.log("Connection has been established successfully.");
       }
-      console.log("Connection has been established successfully.");
     } catch (error) {
       console.error("Unable to connect to the database:", error);
+    }
+  }
+
+  async createSuperuser() {
+    const { User } = this.connection.models;
+    const superAdmin = await User.findOne({
+      where: {
+        email: superuserConfig.email,
+      },
+    });
+    if (!superAdmin) {
+      await User.create({
+        name: "Superuser",
+        email: superuserConfig.email,
+        admin: true,
+        password: superuserConfig.password,
+        verified: true,
+      });
     }
   }
 }

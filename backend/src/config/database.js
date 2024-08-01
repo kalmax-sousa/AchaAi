@@ -5,7 +5,7 @@ export default {
   host: process.env.DB_HOST || "localhost",
   username: process.env.DB_USER || "postgres",
   password: process.env.DB_PASS || "postgres",
-  database: process.env.DB_NAME,
+  database: process.env.DB_NAME || "acha_ai",
   port: process.env.DB_PORT || 5432,
   define: {
     timestamps: true,

@@ -6,6 +6,7 @@ import UserConfirmation from "../models/UserConfirmation.js";
 import UserDTO from "../dto/UserDTO.js";
 
 import MailProvider from "../../app/providers/MailProvider.js";
+import StorageProvider from "../providers/StorageProvider.js";
 
 class UserController {
   async getAll(req, res) {
@@ -28,7 +29,9 @@ class UserController {
       if (!user)
         return res.status(404).json({ message: "Usuario nao encontrado" });
 
-      res.json(user);
+      const userDTO = new UserDTO(user);
+
+      res.json(userDTO);
     } catch (error) {
       res.status(500).json({ message: "Erro no servidor: " + error });
     }
@@ -100,23 +103,33 @@ class UserController {
     }
   }
 
-  async updateUser(req, res) {
-    try {
-      const { name, email, password } = req.body;
+  async updateUserAvatar(req, res) {
+    const transaction = await User.sequelize.transaction();
 
-      const user = await User.findByPk(req.params.id);
+    try {
+      const user = await User.findByPk(req.userId);
 
       if (!user)
         return res.status(404).json({ message: "Usuario nao encontrado" });
 
-      user.name = name ?? user.name;
-      user.email = email ?? user.email;
-      user.password = password ?? user.password;
+      const uploadResult = await StorageProvider.uploadOnCloud(
+        req.file,
+        user.image_url,
+      ).catch((error) => {
+        return res.status(406).json({ message: "Falha no upload: " + error });
+      });
 
-      const updatedUser = await user.save();
+      if (uploadResult) {
+        user.image_url = uploadResult.secure_url;
+      }
 
-      res.json(updatedUser);
+      const updatedUser = await user.save({ transaction });
+      const updatedUserDTO = new UserDTO(updatedUser);
+
+      await transaction.commit();
+      res.json(updatedUserDTO);
     } catch (error) {
+      await transaction.rollback();
       res.status(500).json({ message: "Erro no servidor: " + error });
     }
   }

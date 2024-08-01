@@ -7,17 +7,20 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "node --experimental-modules --watch --no-warnings src/server.js",
-    "dbclear": "node src/database/index.js",
+    "clear": "node --experimental-modules --watch --no-warnings src/server.js dbclear",
     "lint": "eslint . --config eslint.config.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^5.1.1",
+    "cloudinary": "^2.3.1",
+    "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "ejs": "^3.1.10",
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1",
     "nodemailer": "^6.9.14",
     "ora": "^8.0.1",
     "pg": "^8.11.5",

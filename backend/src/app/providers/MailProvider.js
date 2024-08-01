@@ -25,8 +25,8 @@ class MailProvider {
     try {
       await this.transporter.sendMail({
         from: {
-          name: "AcheAI",
-          address: "devtester555@outlook.com",
+          name: mailConfig.auth.user.split("@")[0],
+          address: mailConfig.auth.user,
         },
         to: {
           name: to.name,

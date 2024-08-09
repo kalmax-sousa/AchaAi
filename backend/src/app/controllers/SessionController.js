@@ -4,6 +4,7 @@ import crypto from "crypto";
 
 import authConfig from "../../config/auth.js";
 import User from "../models/User.js";
+import UserDTO from "../dto/UserDTO.js";
 import UserConfirmation from "../models/UserConfirmation.js";
 
 import MailProvider from "../../app/providers/MailProvider.js";
@@ -33,19 +34,18 @@ class SessionController {
     if (!user.verified) {
       return res.status(401).json({ error: "Email não verificado." });
     }
-    const { id, name, enrollment, image_url, admin } = user;
+
+    const userDTO = new UserDTO(user);
+
     return res.json({
-      user: {
-        id,
-        name,
-        email,
-        enrollment,
-        image_url,
-        admin,
-      },
-      token: jwt.sign({ id, admin }, authConfig.secret, {
-        expiresIn: authConfig.expiresIn,
-      }),
+      user: userDTO,
+      token: jwt.sign(
+        { id: userDTO.id, admin: user.admin },
+        authConfig.secret,
+        {
+          expiresIn: authConfig.expiresIn,
+        },
+      ),
     });
   }
 

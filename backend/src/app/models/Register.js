@@ -23,8 +23,8 @@ class Register extends Model {
   }
 
   static associate(models) {
-    this.hasOne(models.User, { foreignKey: "user_id", as: "user" });
-    this.hasOne(models.Item, { foreignKey: "item_id", as: "item" });
+    this.belongsTo(models.User, { foreignKey: "user_id", as: "user" });
+    this.belongsTo(models.Item, { foreignKey: "item_id", as: "item" });
   }
 }
 

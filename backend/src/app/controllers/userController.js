@@ -52,6 +52,10 @@ class UserController {
           .min(8, "Senha deve ter pelo menos 8 caracteres")
           .max(32, "Senha deve ter no maximo 32 caracteres")
           .required("Senha é obrigatória!"),
+        password_confirmation: yup
+          .string()
+          .oneOf([yup.ref("password"), null], "Senhas diferentes")
+          .required("Confirmação de senha é obrigatória!"),
       });
 
       await schema.validate(req.body, { abortEarly: false });
@@ -134,6 +138,93 @@ class UserController {
     }
   }
 
+  async updateUserPassword(req, res) {
+    const transaction = await User.sequelize.transaction();
+
+    try {
+      const schema = yup.object().shape({
+        old_password: yup
+          .string()
+          .min(8, "Senha deve ter pelo menos 8 caracteres")
+          .max(32, "Senha deve ter no maximo 32 caracteres")
+          .required("Senha anterior é obrigatória!"),
+        password: yup
+          .string()
+          .min(8, "Senha deve ter pelo menos 8 caracteres")
+          .max(32, "Senha deve ter no maximo 32 caracteres")
+          .required("Nova Senha é obrigatória!"),
+        password_confirmation: yup
+          .string()
+          .oneOf(
+            [yup.ref("password")],
+            "Confirmação e nova senha devem ser iguais",
+          )
+          .required("Confirmação da senha é obrigatória!"),
+      });
+      const { password, password_confirmation } = req.body;
+
+      await schema.validate(req.body, { abortEarly: false });
+
+      const user = await User.findByPk(req.userId);
+
+      if (!user)
+        return res.status(404).json({ message: "Usuario nao encontrado" });
+
+      if (!(await user.checkPassword(password, user.password_hash))) {
+        return res.status(401).json({ message: "Senha Invalida" });
+      }
+
+      if (password === password_confirmation) {
+        return res
+          .status(406)
+          .json({ message: "As senhas devem ser diferentes" });
+      }
+
+      user.password = password;
+      const updatedUser = await user.save({ transaction });
+      const updatedUserDTO = new UserDTO(updatedUser);
+
+      await transaction.commit();
+      res.json(updatedUserDTO);
+    } catch (error) {
+      await transaction.rollback();
+      res.status(500).json({ message: "Erro no servidor: " + error });
+    }
+  }
+
+  async updateUserProfile(req, res) {
+    const transaction = await User.sequelize.transaction();
+
+    try {
+      const schema = yup.object().shape({
+        name: yup.string(),
+        email: yup.string().email(),
+        phonenumber: yup.string(),
+      });
+      const { name, email, phonenumber } = req.body;
+
+      await schema.validate(req.body, { abortEarly: false });
+
+      const user = await User.findByPk(req.userId);
+
+      if (!user)
+        return res.status(404).json({ message: "Usuario nao encontrado" });
+
+      user.name = name;
+      user.email = email;
+      user.phonenumber = phonenumber;
+
+      const updatedUser = await user.save({ transaction });
+      const updatedUserDTO = new UserDTO(updatedUser);
+
+      await transaction.commit();
+      res.json(updatedUserDTO);
+    } catch (error) {
+      await transaction.rollback();
+      res.status(500).json({ message: "Erro no servidor: " + error });
+    }
+  }
+
   async recoverUserPassword(req, res) {
     const transaction = await User.sequelize.transaction();
 
@@ -183,21 +274,6 @@ class UserController {
       } else {
         res.status(500).json({ message: "Erro no servidor: " + error });
       }
-    }
-  }
-
-  async deleteUser(req, res) {
-    try {
-      const user = await User.findByPk(req.params.id);
-
-      if (!user)
-        return res.status(404).json({ message: "Usuario nao encontrado" });
-
-      User.destroy({ where: { id: req.params.id } });
-
-      res.json({ message: "Usuario deletado com sucesso" });
-    } catch (error) {
-      res.status(500).json({ message: "Erro no servidor: " + error });
     }
   }
 }

@@ -9,7 +9,7 @@ import MailProvider from "../../app/providers/MailProvider.js";
 import StorageProvider from "../providers/StorageProvider.js";
 
 class UserController {
-  async getAll(req, res) {
+  async show(req, res) {
     try {
       const Users = await User.findAll();
 
@@ -22,7 +22,7 @@ class UserController {
       res.status(500).json({ message: "Erro no servidor: " + error });
     }
   }
-  async getUser(req, res) {
+  async index(req, res) {
     try {
       const user = await User.findByPk(req.params.id);
 
@@ -36,7 +36,7 @@ class UserController {
       res.status(500).json({ message: "Erro no servidor: " + error });
     }
   }
-  async createUser(req, res) {
+  async store(req, res) {
     const transaction = await User.sequelize.transaction();
 
     try {
@@ -107,7 +107,7 @@ class UserController {
     }
   }
 
-  async updateUserAvatar(req, res) {
+  async updateAvatar(req, res) {
     const transaction = await User.sequelize.transaction();
 
     try {
@@ -119,13 +119,9 @@ class UserController {
       const uploadResult = await StorageProvider.uploadOnCloud(
         req.file,
         user.image_url,
-      ).catch((error) => {
-        return res.status(406).json({ message: "Falha no upload: " + error });
-      });
+      );
 
-      if (uploadResult) {
-        user.image_url = uploadResult.secure_url;
-      }
+      user.image_url = uploadResult;
 
       const updatedUser = await user.save({ transaction });
       const updatedUserDTO = new UserDTO(updatedUser);
@@ -138,7 +134,7 @@ class UserController {
     }
   }
 
-  async updateUserPassword(req, res) {
+  async updatePassword(req, res) {
     const transaction = await User.sequelize.transaction();
 
     try {
@@ -192,7 +188,7 @@ class UserController {
     }
   }
 
-  async updateUserProfile(req, res) {
+  async updateProfile(req, res) {
     const transaction = await User.sequelize.transaction();
 
     try {
@@ -225,7 +221,7 @@ class UserController {
     }
   }
 
-  async recoverUserPassword(req, res) {
+  async recoverPassword(req, res) {
     const transaction = await User.sequelize.transaction();
 
     try {

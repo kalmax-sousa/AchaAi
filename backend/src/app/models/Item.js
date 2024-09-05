@@ -4,9 +4,13 @@ class Item extends Model {
   static init(sequelize) {
     super.init(
       {
-        description: {
+        name: {
           type: Sequelize.STRING,
           allowNull: false,
+        },
+        description: {
+          type: Sequelize.STRING,
+          allowNull: true,
         },
         location: {
           type: Sequelize.STRING,
@@ -14,7 +18,7 @@ class Item extends Model {
         },
         image_url: {
           type: Sequelize.STRING,
-          allowNull: false,
+          allowNull: true,
         },
         status: {
           type: Sequelize.ENUM,
@@ -22,17 +26,9 @@ class Item extends Model {
           defaultValue: "WITH_FINDER",
           allowNull: false,
         },
-        stock: {
-          type: Sequelize.BOOLEAN,
-          defaultValue: false,
+        finded_at: {
+          type: Sequelize.DATE,
           allowNull: false,
-        },
-        created_at: {
-          type: Sequelize.DATE,
-          defaultValue: Sequelize.NOW,
-        },
-        updated_at: {
-          type: Sequelize.DATE,
           defaultValue: Sequelize.NOW,
         },
         expired: {
@@ -49,11 +45,9 @@ class Item extends Model {
 
   static associate(models) {
     this.belongsTo(models.User, { foreignKey: "user_id", as: "user" });
-    this.belongsToMany(models.Category, {
+    this.belongsTo(models.Category, {
       foreignKey: "category_id",
       as: "category",
-      through: "item_category",
-      timestamps: false,
     });
   }
 }

@@ -12,7 +12,6 @@ class StorageProvider {
   }
 
   async uploadOnCloud(file, previousImageUrl = null) {
-    console.log(file);
     if (!file) {
       throw new Error("Arquivo não encontrado");
     }
@@ -43,8 +42,7 @@ class StorageProvider {
 
     await this.deleteOnLocal(path);
 
-    console.log(uploadResult);
-    return uploadResult;
+    return uploadResult.secure_url;
   }
 
   async deleteOnLocal(path) {

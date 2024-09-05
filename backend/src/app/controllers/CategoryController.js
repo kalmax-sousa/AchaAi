@@ -1,7 +1,7 @@
 import Category from "../models/Category.js";
 
 class CategoryController {
-  async createCategory(req, res) {
+  async store(req, res) {
     try {
       const { name, description } = req.body;
       const category = await Category.create({ name, description });
@@ -11,7 +11,7 @@ class CategoryController {
     }
   }
 
-  async getAllCategories(req, res) {
+  async show(req, res) {
     try {
       const categories = await Category.findAll();
       res.status(200).json(categories);
@@ -20,7 +20,7 @@ class CategoryController {
     }
   }
 
-  async getCategoryById(req, res) {
+  async index(req, res) {
     try {
       const { id } = req.params;
       const category = await Category.findByPk(id);
@@ -33,7 +33,7 @@ class CategoryController {
     }
   }
 
-  async updateCategoryById(req, res) {
+  async update(req, res) {
     try {
       const { id } = req.params;
       const { name, description } = req.body;
@@ -48,7 +48,7 @@ class CategoryController {
     }
   }
 
-  async deleteCategoryById(req, res) {
+  async delete(req, res) {
     try {
       const { id } = req.params;
       const category = await Category.findByPk(id);

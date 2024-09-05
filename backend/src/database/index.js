@@ -15,7 +15,6 @@ class Database {
   constructor() {
     this.init();
     this.sync();
-    this.createSuperuser();
   }
 
   init() {
@@ -32,10 +31,11 @@ class Database {
       if (process.argv[2] === "dbclear") {
         await this.connection.sync({ force: true });
         console.log("Database Cleared");
-      } else {
+      } else if (process.argv[2] === "dbcreate") {
         await this.connection.sync();
         console.log("Connection has been established successfully.");
       }
+      this.createSuperuser();
     } catch (error) {
       console.error("Unable to connect to the database:", error);
     }

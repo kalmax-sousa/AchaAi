@@ -1,129 +1,182 @@
-import ItemController from '../../app/controllers/ItemController.js';
-import Item from '../../app/models/Item.js';
-import User from '../../app/models/User.js';
-import Category from '../../app/models/Category.js';
-import StorageProvider from '../../app/providers/StorageProvider.js';
+import ItemController from '../ItemController.js'; // Ajuste o caminho conforme necessário
+import Item from '../../models/Item';
+import User from '../../models/User';
+import Category from '../../models/Category';
+import StorageProvider from '../../providers/StorageProvider';
 
-jest.mock('../../app/models/Item');
-jest.mock('../../app/models/User');
-jest.mock('../../app/models/Category');
-jest.mock('../../app/providers/StorageProvider');
 
-describe('ItemController', () => {
-  describe('show', () => {
-    it('deve retornar uma lista de itens', async () => {
-      const items = [
-        { id: 1, name: 'Item 1' },
-        { id: 2, name: 'Item 2' },
-      ];
+jest.mock('../../providers/StorageProvider');
+jest.mock('../../models/Item');
+jest.mock('../../models/User');
+jest.mock('../../models/Category');
 
-      Item.findAll.mockResolvedValue(items);
+describe('ItemController.show', () => {
+  let req, res;
 
-      const req = {};
-      const res = {
-        json: jest.fn(),
-      };
+  beforeEach(() => {
+    req = {
+      body: {
+        name: 'Sample Item',
+        category: 1
+      }
+    };
 
-      const controller = new ItemController();
-      await controller.show(req, res);
-
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.json).toHaveBeenCalledWith(items);
-    });
-
-    it('deve retornar um erro se não encontrar itens', async () => {
-      Item.findAll.mockResolvedValue([]);
-
-      const req = {};
-      const res = {
-        status: jest.fn(),
-        json: jest.fn(),
-      };
-
-      const controller = new ItemController();
-      await controller.show(req, res);
-
-      expect(res.status).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Itens não encontrados' });
-    });
+    res = {
+      json: jest.fn(),
+      status: jest.fn(() => res)
+    };
   });
 
-  describe('index', () => {
-    it('deve retornar um item por ID', async () => {
-      const item = { id: 1, name: 'Item 1' };
+  it('should return items with user and category info', async () => {
+    const mockItems = [
+      { id: 1, name: 'Sample Item', user: { id: 1, name: 'John Doe' }, category: { id: 1, name: 'Electronics' } }
+    ];
 
-      Item.findByPk.mockResolvedValue(item);
+    Item.findAll.mockResolvedValue(mockItems);
 
-      const req = { params: { id: 1 } };
-      const res = {
-        json: jest.fn(),
-      };
+    await ItemController.show(req, res);
 
-      const controller = new ItemController();
-      await controller.index(req, res);
-
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.json).toHaveBeenCalledWith(item);
+    expect(Item.findAll).toHaveBeenCalledWith({
+      where: { name: 'Sample Item' },
+      include: [
+        { model: User, as: 'user', attributes: ['id', 'name'] },
+        { model: Category, as: 'category', attributes: ['id', 'name'], where: { id: 1 } }
+      ]
     });
 
-    it('deve retornar um erro se não encontrar item por ID', async () => {
-      Item.findByPk.mockResolvedValue(null);
-
-      const req = { params: { id: 1 } };
-      const res = {
-        status: jest.fn(),
-        json: jest.fn(),
-      };
-
-      const controller = new ItemController();
-      await controller.index(req, res);
-
-      expect(res.status).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Item não encontrado' });
-    });
+    expect(res.json).toHaveBeenCalledWith(mockItems);
   });
 
-  describe('store', () => {
-    it('deve criar um novo item', async () => {
-      const item = { id: 1, name: 'Item 1' };
+  it('should handle errors', async () => {
+    Item.findAll.mockRejectedValue(new Error('Database error'));
 
-      Item.create.mockResolvedValue(item);
+    await ItemController.show(req, res);
 
-      const req = { body: { item: { name: 'Item 1' } } };
-      const res = {
-        status: jest.fn(),
-        json: jest.fn(),
-      };
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch itemsError: Database error' });
+  });
+});
 
-      const controller = new ItemController();
-      await controller.store(req, res);
+describe('ItemController.index', () => {
+  let req, res;
 
-      expect(res.status).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(201);
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.json).toHaveBeenCalledWith(item);
+  beforeEach(() => {
+    req = {
+      params: { id: 1 }
+    };
+
+    res = {
+      json: jest.fn(),
+      status: jest.fn(() => res)
+    };
+  });
+
+  it('should return a specific item by id', async () => {
+    const mockItem = { id: 1, name: 'Sample Item', user: { id: 1, name: 'John Doe' }, category: { id: 1, name: 'Electronics' } };
+
+    Item.findByPk.mockResolvedValue(mockItem);
+
+    await ItemController.index(req, res);
+
+    expect(Item.findByPk).toHaveBeenCalledWith(1, {
+      include: [
+        { model: User, as: 'user', attributes: ['id', 'name'] },
+        { model: Category, as: 'category', attributes: ['id', 'name'], through: { attributes: [] } }
+      ]
     });
 
-    it('deve retornar um erro se não criar um novo item', async () => {
-      Item.create.mockRejectedValue(new Error('Erro ao criar item'));
+    expect(res.json).toHaveBeenCalledWith(mockItem);
+  });
 
-      const req = { body: { item: { name: 'Item 1' } } };
-      const res = {
-        status: jest.fn(),
-        json: jest.fn(),
-      };
+  it('should return 404 if item not found', async () => {
+    Item.findByPk.mockResolvedValue(null);
 
-      const controller = new ItemController();
-      await controller.store(req, res);
+    await ItemController.index(req, res);
 
-      expect(res.status).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Erro ao criar item' });
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({ error: 'Item not found' });
+  });
+
+  it('should handle errors', async () => {
+    Item.findByPk.mockRejectedValue(new Error('Database error'));
+
+    await ItemController.index(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch itemError: Database error' });
+  });
+});
+
+describe('ItemController.store', () => {
+  let req, res;
+
+  beforeEach(() => {
+    req = {
+      body: {
+        item: JSON.stringify({
+          name: 'New Item',
+          description: 'Description',
+          location: 'Location',
+          status: 'available',
+          expired: false,
+          category: 1,
+          finded_at: '2024-09-11'
+        })
+      },
+      file: {
+        path: 'path/to/file'
+      },
+      userId: 1
+    };
+
+    res = {
+      json: jest.fn(),
+      status: jest.fn(() => res)
+    };
+  });
+
+  it('should create a new item', async () => {
+    const mockUploadResult = { secure_url: 'https://fotos.quixada.ufc.br/_data/i/upload/2024/08/20/20240820162035-f62f6255-xl.jpg' };
+    const mockItem = { id: 1, name: 'New Item' };
+
+    StorageProvider.uploadOnCloud.mockResolvedValue(mockUploadResult);
+    Item.create.mockResolvedValue(mockItem);
+
+    await ItemController.store(req, res);
+
+    expect(StorageProvider.uploadOnCloud).toHaveBeenCalledWith(req.file);
+    expect(Item.create).toHaveBeenCalledWith({
+      name: 'New Item',
+      description: 'Description',
+      location: 'Location',
+      image_url: mockUploadResult.secure_url,
+      status: 'available',
+      finded_at: '2024-09-11',
+      expired: false,
+      category_id: 1,
+      user_id: 1
     });
+
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.json).toHaveBeenCalledWith(mockItem);
+  });
+
+  it('should handle upload error', async () => {
+    StorageProvider.uploadOnCloud.mockRejectedValue(new Error('Upload error'));
+
+    await ItemController.store(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(406);
+    expect(res.json).toHaveBeenCalledWith({ message: 'Falha no upload: Error: Upload error' });
+  });
+
+  it('should handle create item error', async () => {
+    StorageProvider.uploadOnCloud.mockResolvedValue({ secure_url: 'https://fotos.quixada.ufc.br/_data/i/upload/2024/08/20/20240820162035-f62f6255-xl.jpg' });
+    Item.create.mockRejectedValue(new Error('Create error'));
+
+    await ItemController.store(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({ error: 'Failed to create itemError: Create error' });
   });
 });

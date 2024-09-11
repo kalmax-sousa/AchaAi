@@ -1,5 +1,8 @@
 {
   "dependencies": {
+    "@babel/preset-env": "^7.25.4",
+    "babel-jest": "^29.7.0",
+    "ts-jest": "^29.2.5",
     "yup": "^1.4.0"
   },
   "devDependencies": {

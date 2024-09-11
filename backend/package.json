@@ -5,7 +5,7 @@
   "main": "app.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
     "dev": "node --experimental-modules --watch --no-warnings src/server.js",
     "clear": "node --experimental-modules --watch --no-warnings src/server.js dbclear",
     "create": "node --experimental-modules --watch --no-warnings src/server.js dbcreate",
@@ -30,6 +30,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.4.0",
+    "babel-jest": "^29.7.0",
     "eslint": "^9.4.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.1.3",

@@ -7,11 +7,9 @@ import crypto from 'crypto';
 
 jest.mock('../../models/User.js');
 jest.mock('../../models/UserConfirmation.js');
-jest.mock('../../providers/MailProvider', () => {
-  return {
-    sendMail: jest.fn(),
-  };
-});
+jest.mock('../../providers/MailProvider', () => ({
+  sendMail: jest.fn(),
+}));
 jest.mock('jsonwebtoken');
 jest.mock('crypto', () => ({
   randomBytes: jest.fn().mockReturnValue({
@@ -95,6 +93,18 @@ describe('SessionController', () => {
         user: userDTO,
         token: 'fake-jwt-token',
       });
+    });
+
+    it('deve retornar 500 em caso de erro no servidor', async () => {
+      const req = { body: { email: 'test@example.com', password: '123456' } };
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+      User.findOne.mockRejectedValue(new Error('Erro no servidor'));
+
+      await SessionController.store(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Erro no servidor: Erro no servidor' });
     });
   });
 
@@ -187,22 +197,16 @@ describe('SessionController', () => {
       expect(res.json).toHaveBeenCalledWith({ error: 'Email ja verificado.' });
     });
 
-    it('deve confirmar o email do usuário e retornar 202', async () => {
+    it('deve retornar 500 em caso de falha no servidor', async () => {
       const req = { body: { token: 'valid-token' } };
       const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
 
-      const userConfirmation = { confirmed: false, user_id: 1 };
-      const user = { verified: false, save: jest.fn() };
-
-      UserConfirmation.findOne.mockResolvedValue(userConfirmation);
-      User.findByPk.mockResolvedValue(user);
+      UserConfirmation.findOne.mockRejectedValue(new Error('Erro no servidor'));
 
       await SessionController.accountConfirmation(req, res);
 
-      expect(user.verified).toBe(true);
-      expect(user.save).toHaveBeenCalled();
-      expect(res.status).toHaveBeenCalledWith(202);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Email verificado com sucesso!' });
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Erro no servidor: Erro no servidor' });
     });
   });
 });

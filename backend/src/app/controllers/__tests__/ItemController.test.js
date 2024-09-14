@@ -1,14 +1,14 @@
-import ItemController from '../ItemController.js'; // Ajuste o caminho conforme necessário
+import ItemController from '../ItemController.js'; 
 import Item from '../../models/Item';
 import User from '../../models/User';
 import Category from '../../models/Category';
 import StorageProvider from '../../providers/StorageProvider';
 
 
-jest.mock('../../providers/StorageProvider');
 jest.mock('../../models/Item');
 jest.mock('../../models/User');
 jest.mock('../../models/Category');
+jest.mock('../../providers/StorageProvider');
 
 describe('ItemController.show', () => {
   let req, res;

@@ -1,212 +1,208 @@
-import SessionController from '../../app/controllers/SessionController.js';
-import User from '../../app/models/User.js';
+import SessionController from '../../controllers/SessionController.js';
+import User from '../../models/User.js';
+import UserConfirmation from '../../models/UserConfirmation.js';
+import MailProvider from '../../providers/MailProvider.js';
+import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
+
+jest.mock('../../models/User.js');
+jest.mock('../../models/UserConfirmation.js');
+jest.mock('../../providers/MailProvider', () => {
+  return {
+    sendMail: jest.fn(),
+  };
+});
+jest.mock('jsonwebtoken');
+jest.mock('crypto', () => ({
+  randomBytes: jest.fn().mockReturnValue({
+    toString: jest.fn().mockReturnValue('random-token'),
+  }),
+}));
 
 describe('SessionController', () => {
   describe('store', () => {
-    it('deve retornar um token de autenticação válido', async () => {
-      const user = {
-        id: 1,
-        email: 'joao@example.com',
-        password: '12345',
-      };
+    it('deve retornar 400 se a validação falhar', async () => {
+      const req = { body: { email: 'invalid-email', password: '' } };
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
 
-      const userDTO = new User(user);
+      await SessionController.store(req, res);
 
-      const controller = new SessionController();
-
-      // Mock do método findByPk
-      User.prototype.findOne = jest.fn().mockResolvedValue(user);
-
-      // Mock do método checkPassword
-      User.prototype.checkPassword = jest.fn().mockResolvedValue(true);
-
-      const req = {
-        body: {
-          email: 'joao@example.com',
-          password: '12345',
-        },
-      };
-
-      const res = {
-        json: jest.fn(),
-      };
-
-      await controller.store(req, res);
-
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.json).toHaveBeenCalledWith({
-        user: userDTO,
-        token: expect.any(String),
-      });
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Falha na validação dos dados.' });
     });
 
-    it('deve retornar um erro se o email não for encontrado', async () => {
-      const controller = new SessionController();
+    it('deve retornar 401 se o usuário não for encontrado', async () => {
+      const req = { body: { email: 'test@example.com', password: '123456' } };
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
 
-      // Mock do método findByPk
-      User.prototype.findOne = jest.fn().mockResolvedValue(null);
+      User.findOne.mockResolvedValue(null);
 
-      const req = {
-        body: {
-          email: 'joao@example.com',
-          password: '12345',
-        },
-      };
+      await SessionController.store(req, res);
 
-      const res = {
-        status: jest.fn(),
-        json: jest.fn(),
-      };
-
-      await controller.store(req, res);
-
-      expect(res.status).toHaveBeenCalledTimes(1);
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledTimes(1);
       expect(res.json).toHaveBeenCalledWith({ error: 'Email não encontrado.' });
     });
 
-    it('deve retornar um erro se a senha for inválida', async () => {
+    it('deve retornar 401 se a senha estiver incorreta', async () => {
+      const req = { body: { email: 'test@example.com', password: 'wrong-password' } };
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
       const user = {
-        id: 1,
-        email: 'joao@example.com',
-        password: '12345',
+        checkPassword: jest.fn().mockResolvedValue(false),
       };
+      User.findOne.mockResolvedValue(user);
 
-      const controller = new SessionController();
+      await SessionController.store(req, res);
 
-      // Mock do método findByPk
-      User.prototype.findOne = jest.fn().mockResolvedValue(user);
-
-      // Mock do método checkPassword
-      User.prototype.checkPassword = jest.fn().mockResolvedValue(false);
-
-      const req = {
-        body: {
-          email: 'joao@example.com',
-          password: '12345',
-        },
-      };
-
-      const res = {
-        status: jest.fn(),
-        json: jest.fn(),
-      };
-
-      await controller.store(req, res);
-
-      expect(res.status).toHaveBeenCalledTimes(1);
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledTimes(1);
       expect(res.json).toHaveBeenCalledWith({ error: 'Email e/ou senha invalidos.' });
+    });
+
+    it('deve retornar 401 se o email não estiver verificado', async () => {
+      const req = { body: { email: 'test@example.com', password: '123456' } };
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+      const user = {
+        checkPassword: jest.fn().mockResolvedValue(true),
+        verified: false,
+      };
+      User.findOne.mockResolvedValue(user);
+
+      await SessionController.store(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Email não verificado.' });
+    });
+
+    it('deve retornar um token e dados do usuário se o login for bem-sucedido', async () => {
+      const req = { body: { email: 'test@example.com', password: '123456' } };
+      const res = { json: jest.fn() };
+
+      const user = {
+        checkPassword: jest.fn().mockResolvedValue(true),
+        verified: true,
+        admin: false,
+        id: 1,
+      };
+      const userDTO = { id: 1, admin: false };
+      User.findOne.mockResolvedValue(user);
+
+      jwt.sign.mockReturnValue('fake-jwt-token');
+
+      await SessionController.store(req, res);
+
+      expect(res.json).toHaveBeenCalledWith({
+        user: userDTO,
+        token: 'fake-jwt-token',
+      });
     });
   });
 
   describe('recoverPassword', () => {
-    it('deve enviar um email de recuperação de senha', async () => {
-      const user = {
-        id: 1,
-        email: 'joao@example.com',
-      };
+    it('deve retornar 400 se a validação falhar', async () => {
+      const req = { body: { email: 'invalid-email' } };
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
 
-      const controller = new SessionController();
+      await SessionController.recoverPassword(req, res);
 
-      // Mock do método findByPk
-      User.prototype.findOne = jest.fn().mockResolvedValue(user);
-
-      const req = {
-        body: {
-          email: 'joao@example.com',
-        },
-      };
-
-      const res = {
-        json: jest.fn(),
-      };
-
-      await controller.recoverPassword(req, res);
-
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Email de recuperação de senha enviado com sucesso!' });
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Falha na validação dos dados.' });
     });
 
-    it('deve retornar um erro se o email não for encontrado', async () => {
-      const controller = new SessionController();
+    it('deve retornar 404 se o email não for encontrado', async () => {
+      const req = { body: { email: 'test@example.com' } };
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
 
-      // Mock do método findByPk
-      User.prototype.findOne = jest.fn().mockResolvedValue(null);
+      User.findOne.mockResolvedValue(null);
 
-      const req = {
-        body: {
-          email: 'joao@example.com',
-        },
-      };
+      await SessionController.recoverPassword(req, res);
 
-      const res = {
-        status: jest.fn(),
-        json: jest.fn(),
-      };
-
-      await controller.recoverPassword(req, res);
-
-      expect(res.status).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledTimes(1);
+      expect(res.status).toHaveBeenCalledWith(404);
       expect(res.json).toHaveBeenCalledWith({ error: 'Email não encontrado.' });
+    });
+
+    it('deve retornar 401 se o email não estiver verificado', async () => {
+      const req = { body: { email: 'test@example.com' } };
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+      const user = { verified: false };
+      User.findOne.mockResolvedValue(user);
+
+      await SessionController.recoverPassword(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Email não verificado.' });
+    });
+
+    it('deve enviar um email de recuperação e retornar 204', async () => {
+      const req = { body: { email: 'test@example.com' } };
+      const res = { status: jest.fn().mockReturnThis() };
+
+      const user = { id: 1, email: 'test@example.com', name: 'Test', verified: true };
+      User.findOne.mockResolvedValue(user);
+
+      UserConfirmation.findOne.mockResolvedValue(null);
+      UserConfirmation.create.mockResolvedValue({ token: 'random-token' });
+
+      await SessionController.recoverPassword(req, res);
+
+      expect(MailProvider.sendMail).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(204);
     });
   });
 
   describe('accountConfirmation', () => {
-    it('deve confirmar a conta do usuário', async () => {
-      const user = {
-        id: 1,
-        email: 'joao@example.com',
-      };
+    it('deve retornar 400 se o token não for fornecido', async () => {
+      const req = { body: { token: '' } };
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
 
-      const controller = new SessionController();
+      await SessionController.accountConfirmation(req, res);
 
-      // Mock do método findByPk
-      User.prototype.findOne = jest.fn().mockResolvedValue(user);
-
-      const req = {
-        body: {
-          email: 'joao@example.com',
-        },
-      };
-
-      const res = {
-        json: jest.fn(),
-      };
-
-      await controller.accountConfirmation(req, res);
-
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Conta confirmada com sucesso!' });
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Falha na validação dos dados.' });
     });
 
-    it('deve retornar um erro se o email não for encontrado', async () => {
-      const controller = new SessionController();
+    it('deve retornar 401 se o token for inválido', async () => {
+      const req = { body: { token: 'invalid-token' } };
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
 
-      // Mock do método findByPk
-      User.prototype.findOne = jest.fn().mockResolvedValue(null);
+      UserConfirmation.findOne.mockResolvedValue(null);
 
-      const req = {
-        body: {
-          email: 'joao@example.com',
-        },
-      };
+      await SessionController.accountConfirmation(req, res);
 
-      const res = {
-        status: jest.fn(),
-        json: jest.fn(),
-      };
-
-      await controller.accountConfirmation(req, res);
-
-      expect(res.status).toHaveBeenCalledTimes(1);
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledTimes(1);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Email não encontrado.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Token invalido.' });
+    });
+
+    it('deve retornar 200 se o email já estiver confirmado', async () => {
+      const req = { body: { token: 'valid-token' } };
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+      const userConfirmation = { confirmed: true };
+      UserConfirmation.findOne.mockResolvedValue(userConfirmation);
+
+      await SessionController.accountConfirmation(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Email ja verificado.' });
+    });
+
+    it('deve confirmar o email do usuário e retornar 202', async () => {
+      const req = { body: { token: 'valid-token' } };
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+      const userConfirmation = { confirmed: false, user_id: 1 };
+      const user = { verified: false, save: jest.fn() };
+
+      UserConfirmation.findOne.mockResolvedValue(userConfirmation);
+      User.findByPk.mockResolvedValue(user);
+
+      await SessionController.accountConfirmation(req, res);
+
+      expect(user.verified).toBe(true);
+      expect(user.save).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(202);
+      expect(res.json).toHaveBeenCalledWith({ message: 'Email verificado com sucesso!' });
     });
   });
 });

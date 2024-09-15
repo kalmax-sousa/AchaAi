@@ -20,7 +20,7 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const login = async (userData: User): Promise<void> => {
         try {
-            const response = { data: userData }; // Chamada API simulada
+            const response = { data: userData }
             setUser(response.data);
             localStorage.setItem('user', JSON.stringify(response.data));
         } catch (error) {

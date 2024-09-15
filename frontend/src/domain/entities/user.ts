@@ -2,17 +2,20 @@ type UserJsonProps = {
     id: string
     name: string
     email: string
+    token: string
 }
 
 export class User {
     private _id?: string
     private _email: string
     private _name: string
+    private _token?: string
 
-    constructor(email: string, name: string, id?: string,) {
+    constructor(email: string, name: string, token?: string, id?: string) {
         this._id = id
         this._email = email
         this._name = name
+        this._token = token
     }
 
     get id() {
@@ -27,7 +30,11 @@ export class User {
         return this._name
     }
 
-    static fromJson({ id, name, email }: UserJsonProps): User {
-        return new User(email, name, id)
+    get token() {    
+        return this._token
+    }
+
+    static fromJson({ id, name, email, token }: UserJsonProps): User {
+        return new User(email, name, token, id)
     }
 }

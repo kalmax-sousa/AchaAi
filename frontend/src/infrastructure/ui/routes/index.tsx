@@ -10,15 +10,15 @@ const NotFound: React.FC = () => <h1>404</h1>
 
 export const router = createBrowserRouter([
     {
-        path: "/auth",
+        path: "auth",
         element: <AutenticatedRoutes />,
         children: [
             {
-                path: "/login",
+                path: "login",
                 element: <Login />
             }, 
             {
-                path: "/register",
+                path: "register",
                 element: <Register />
             }
         ]

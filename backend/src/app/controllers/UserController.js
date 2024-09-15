@@ -4,7 +4,7 @@ import crypto from "crypto";
 import User from "../models/User.js";
 import UserConfirmation from "../models/UserConfirmation.js";
 import UserDTO from "../dto/UserDTO.js";
-  
+
 import MailProvider from "../../app/providers/MailProvider.js";
 import StorageProvider from "../providers/StorageProvider.js";
 
@@ -102,7 +102,7 @@ class UserController {
           .status(400)
           .json({ message: "Dados inválidos!", errors: error.errors });
       } else {
-        res.status(500).json({ message: "Erro no servidor: " + error });
+        res.status(500).json({ message: "Erro no servidor: " + error.message });
       }
     }
   }

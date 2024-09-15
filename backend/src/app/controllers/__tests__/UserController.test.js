@@ -189,6 +189,7 @@ describe("UserController", () => {
 
       const transaction = { commit: jest.fn(), rollback: jest.fn() };
       User.sequelize.transaction.mockResolvedValue(transaction);
+      User.findOne.mockResolvedValue(null);
       User.create.mockRejectedValue(new Error("Erro no servidor"));
 
       const res = {

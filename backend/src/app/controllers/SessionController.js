@@ -11,42 +11,48 @@ import MailProvider from "../../app/providers/MailProvider.js";
 
 class SessionController {
   async store(req, res) {
-    const schema = Yup.object().shape({
-      email: Yup.string().email().required(),
-      password: Yup.string().required(),
-    });
+    try {
+      const schema = Yup.object().shape({
+        email: Yup.string().email().required(),
+        password: Yup.string().required(),
+      });
 
-    const { email, password } = req.body;
+      const { email, password } = req.body;
 
-    if (!(await schema.isValid(req.body))) {
-      return res.status(400).json({ error: "Falha na validação dos dados." });
+      if (!(await schema.isValid(req.body))) {
+        return res.status(400).json({ error: "Falha na validação dos dados." });
+      }
+
+      const user = await User.findOne({ where: { email } });
+
+      if (!user) {
+        return res.status(401).json({ error: "Email não encontrado." });
+      }
+      if (!(await user.checkPassword(password, user.password_hash))) {
+        return res.status(401).json({ error: "Email e/ou senha invalidos." });
+      }
+
+      if (!user.verified) {
+        return res.status(401).json({ error: "Email não verificado." });
+      }
+
+      const userDTO = new UserDTO(user);
+
+      return res.json({
+        user: userDTO,
+        token: jwt.sign(
+          { id: userDTO.id, admin: user.admin },
+          authConfig.secret,
+          {
+            expiresIn: authConfig.expiresIn,
+          },
+        ),
+      });
+    } catch (error) {
+      return res
+        .status(500)
+        .json({ error: "Erro no servidor: " + error.message });
     }
-
-    const user = await User.findOne({ where: { email } });
-
-    if (!user) {
-      return res.status(401).json({ error: "Email não encontrado." });
-    }
-    if (!(await user.checkPassword(password, user.password_hash))) {
-      return res.status(401).json({ error: "Email e/ou senha invalidos." });
-    }
-
-    if (!user.verified) {
-      return res.status(401).json({ error: "Email não verificado." });
-    }
-
-    const userDTO = new UserDTO(user);
-
-    return res.json({
-      user: userDTO,
-      token: jwt.sign(
-        { id: userDTO.id, admin: user.admin },
-        authConfig.secret,
-        {
-          expiresIn: authConfig.expiresIn,
-        },
-      ),
-    });
   }
 
   async recoverPassword(req, res) {
@@ -124,7 +130,9 @@ class SessionController {
 
       return res.status(202).json({ message: "Email verificado com sucesso!" });
     } catch (error) {
-      return res.status(500).json({ error: "Erro no servidor: " + error });
+      return res
+        .status(500)
+        .json({ error: "Erro no servidor: " + error.message });
     }
   }
 }

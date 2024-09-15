@@ -1,15 +1,37 @@
 import Item from "../models/Item.js";
 import User from "../models/User.js";
 import Category from "../models/Category.js";
+import { Op } from "sequelize";
+import yup from "yup";
 
 import StorageProvider from "../providers/StorageProvider.js";
 
 class ItemController {
   async show(req, res) {
     try {
-      const { category, ...query } = req.body;
+      const { category, query } = req.body;
+
+      if (query.status === "DELIVERED" || query.expired) {
+        return res.status(401).json({ error: "Permissão negada" });
+      }
       const items = await Item.findAll({
-        where: query,
+        where: {
+          name: { [Op.iLike]: `%${query.name ?? ""}%` },
+          location: { [Op.iLike]: `%${query.location ?? ""}%` },
+          description: { [Op.iLike]: `%${query.description ?? ""}%` },
+          status: query.status ?? {
+            [Op.or]: ["LOST_AND_FOUND", "WITH_FINDER"],
+          },
+          finded_at: query.finded_at
+            ? new Date(query.finded_at)
+            : {
+                [Op.gte]: new Date("1970-01-01"),
+              },
+          expired: query.expired ?? {
+            [Op.or]: [false, null, true],
+          },
+          category_id: category ? { [Op.eq]: category } : "",
+        },
         include: [
           {
             model: User,
@@ -20,13 +42,14 @@ class ItemController {
             model: Category,
             as: "category",
             attributes: ["id", "name"],
-            where: category ? { id: category } : undefined,
           },
         ],
       });
       return res.json(items);
     } catch (error) {
-      return res.status(500).json({ error: "Failed to fetch items" + error });
+      return res
+        .status(500)
+        .json({ error: "Falha no servidor: " + error.message });
     }
   }
 
@@ -43,18 +66,22 @@ class ItemController {
             model: Category,
             as: "category",
             attributes: ["id", "name"],
-            through: { attributes: [] },
           },
         ],
       });
 
       if (!item) {
-        return res.status(404).json({ error: "Item not found" });
+        return res.status(404).json({ error: "Item não encontrado" });
+      }
+      if (item.status === "DELIVERED" || item.expired) {
+        return res.status(401).json({ error: "Permissão negada" });
       }
 
       return res.json(item);
     } catch (error) {
-      return res.status(500).json({ error: "Failed to fetch item" + error });
+      return res
+        .status(500)
+        .json({ error: "Falha no servidor: " + error.message });
     }
   }
 
@@ -70,9 +97,15 @@ class ItemController {
         finded_at,
       } = JSON.parse(req.body.item);
 
+      if ((status === "DELIVERED" || expired) && !req.admin) {
+        return res.status(401).json({ error: "Permissão negada" });
+      }
+
       const uploadResult = await StorageProvider.uploadOnCloud(req.file).catch(
         (error) => {
-          return res.status(406).json({ message: "Falha no upload: " + error });
+          return res
+            .status(406)
+            .json({ message: "Falha no upload: " + error.message });
         },
       );
 
@@ -95,7 +128,9 @@ class ItemController {
 
       return res.status(201).json(item);
     } catch (error) {
-      return res.status(500).json({ error: "Failed to create item" + error });
+      return res
+        .status(500)
+        .json({ error: "Erro no servidor: " + error.message });
     }
   }
 
@@ -113,16 +148,25 @@ class ItemController {
       const item = await Item.findByPk(req.params.id);
 
       if (!item) {
-        return res.status(404).json({ error: "Item not found" });
+        return res.status(404).json({ error: "Item não encontrado" });
+      }
+      if (req.userId !== item.user_id || !req.admin) {
+        return res.status(401).json({ error: "Permissão negada" });
       }
 
-      const uploadResult = await StorageProvider.uploadOnCloud(req.file);
+      const uploadResult = await StorageProvider.uploadOnCloud(req.file).catch(
+        (error) => {
+          return res
+            .status(406)
+            .json({ message: "Falha no upload: " + error.message });
+        },
+      );
 
       await item.update({
         name,
         description,
         location,
-        image_url: uploadResult,
+        image_url: uploadResult.secure_url,
         status,
         finded_at,
         expired,
@@ -131,7 +175,9 @@ class ItemController {
 
       return res.status(200).json(item);
     } catch (error) {
-      return res.status(500).json({ error: "Failed to update item" + error });
+      return res
+        .status(500)
+        .json({ error: "Erro no servidor: " + error.message });
     }
   }
 
@@ -140,14 +186,20 @@ class ItemController {
       const item = await Item.findByPk(req.params.id);
 
       if (!item) {
-        return res.status(404).json({ error: "Item not found" });
+        return res.status(404).json({ error: "Item não encontrado" });
+      }
+
+      if (req.userId !== item.user_id || !req.admin) {
+        return res.status(401).json({ error: "Permissão negada" });
       }
 
       await item.destroy();
 
       return res.status(204).send();
     } catch (error) {
-      return res.status(500).json({ error: "Failed to delete item" + error });
+      return res
+        .status(500)
+        .json({ error: "Erro no servidor: " + error.message });
     }
   }
 }

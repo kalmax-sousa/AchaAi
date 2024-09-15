@@ -33,6 +33,7 @@ class Item extends Model {
         },
         expired: {
           type: Sequelize.BOOLEAN,
+          defaultValue: false,
         },
       },
       {

@@ -1,14 +1,16 @@
 /* eslint-disable no-undef */
 import ItemController from "../ItemController.js";
-import Item from "../../models/Item";
-import User from "../../models/User";
-import Category from "../../models/Category";
-import StorageProvider from "../../providers/StorageProvider";
+import Item from "../../models/Item.js";
+import User from "../../models/User.js";
+import Category from "../../models/Category.js";
+import StorageProvider from "../../providers/StorageProvider.js";
 
-jest.mock("../../models/Item");
-jest.mock("../../models/User");
-jest.mock("../../models/Category");
-jest.mock("../../providers/StorageProvider");
+import { Op } from "sequelize";
+
+jest.mock("../../models/Item.js");
+jest.mock("../../models/User.js");
+jest.mock("../../models/Category.js");
+jest.mock("../../providers/StorageProvider.js");
 
 describe("ItemController.show", () => {
   let req, res;
@@ -16,8 +18,10 @@ describe("ItemController.show", () => {
   beforeEach(() => {
     req = {
       body: {
-        name: "Sample Item",
-        category: 1,
+        query: {
+          name: "Sample Item",
+          category: 1,
+        },
       },
     };
 
@@ -37,24 +41,49 @@ describe("ItemController.show", () => {
       },
     ];
 
+    const req = {
+      body: {
+        category: 1,
+        query: {
+          name: "Sample Item",
+        },
+      },
+    };
+
     Item.findAll.mockResolvedValue(mockItems);
 
     await ItemController.show(req, res);
 
     expect(Item.findAll).toHaveBeenCalledWith({
-      where: { name: "Sample Item" },
+      where: {
+        name: { [Op.iLike]: `%Sample Item%` },
+        location: { [Op.iLike]: `%%` },
+        description: { [Op.iLike]: `%%` },
+        status: { [Op.or]: ["LOST_AND_FOUND", "WITH_FINDER"] },
+        finded_at: { [Op.gte]: new Date("1970-01-01") },
+        expired: { [Op.or]: [false, null, true] },
+        category_id: { [Op.eq]: 1 },
+      },
       include: [
         { model: User, as: "user", attributes: ["id", "name"] },
         {
           model: Category,
           as: "category",
           attributes: ["id", "name"],
-          where: { id: 1 },
         },
       ],
     });
 
     expect(res.json).toHaveBeenCalledWith(mockItems);
+  });
+
+  it("should return 401 if status is DELIVERED or expired", async () => {
+    req.body.query.status = "DELIVERED";
+
+    await ItemController.show(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(res.json).toHaveBeenCalledWith({ error: "Permissão negada" });
   });
 
   it("should handle errors", async () => {
@@ -64,7 +93,7 @@ describe("ItemController.show", () => {
 
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({
-      error: "Failed to fetch itemsError: Database error",
+      error: "Falha no servidor: Database error",
     });
   });
 });
@@ -98,16 +127,21 @@ describe("ItemController.index", () => {
     expect(Item.findByPk).toHaveBeenCalledWith(1, {
       include: [
         { model: User, as: "user", attributes: ["id", "name"] },
-        {
-          model: Category,
-          as: "category",
-          attributes: ["id", "name"],
-          through: { attributes: [] },
-        },
+        { model: Category, as: "category", attributes: ["id", "name"] },
       ],
     });
 
     expect(res.json).toHaveBeenCalledWith(mockItem);
+  });
+
+  it("should return 401 if status is DELIVERED or expired", async () => {
+    const mockItem = { id: 1, status: "DELIVERED", expired: false };
+    Item.findByPk.mockResolvedValue(mockItem);
+
+    await ItemController.index(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(res.json).toHaveBeenCalledWith({ error: "Permissão negada" });
   });
 
   it("should return 404 if item not found", async () => {
@@ -116,7 +150,7 @@ describe("ItemController.index", () => {
     await ItemController.index(req, res);
 
     expect(res.status).toHaveBeenCalledWith(404);
-    expect(res.json).toHaveBeenCalledWith({ error: "Item not found" });
+    expect(res.json).toHaveBeenCalledWith({ error: "Item não encontrado" });
   });
 
   it("should handle errors", async () => {
@@ -126,7 +160,7 @@ describe("ItemController.index", () => {
 
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({
-      error: "Failed to fetch itemError: Database error",
+      error: "Falha no servidor: Database error",
     });
   });
 });
@@ -151,6 +185,7 @@ describe("ItemController.store", () => {
         path: "path/to/file",
       },
       userId: 1,
+      admin: false,
     };
 
     res = {
@@ -161,8 +196,7 @@ describe("ItemController.store", () => {
 
   it("should create a new item", async () => {
     const mockUploadResult = {
-      secure_url:
-        "https://fotos.quixada.ufc.br/_data/i/upload/2024/08/20/20240820162035-f62f6255-xl.jpg",
+      secure_url: "https://example.com/image.jpg",
     };
     const mockItem = { id: 1, name: "New Item" };
 
@@ -188,6 +222,20 @@ describe("ItemController.store", () => {
     expect(res.json).toHaveBeenCalledWith(mockItem);
   });
 
+  it("should return 401 if status is DELIVERED or expired and not admin", async () => {
+    req.body.item = JSON.stringify({
+      name: "New Item",
+      status: "DELIVERED",
+      expired: false,
+      category: 1,
+    });
+
+    await ItemController.store(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(res.json).toHaveBeenCalledWith({ error: "Permissão negada" });
+  });
+
   it("should handle upload error", async () => {
     StorageProvider.uploadOnCloud.mockRejectedValue(new Error("Upload error"));
 
@@ -195,14 +243,13 @@ describe("ItemController.store", () => {
 
     expect(res.status).toHaveBeenCalledWith(406);
     expect(res.json).toHaveBeenCalledWith({
-      message: "Falha no upload: Error: Upload error",
+      message: "Falha no upload: Upload error",
     });
   });
 
   it("should handle create item error", async () => {
     StorageProvider.uploadOnCloud.mockResolvedValue({
-      secure_url:
-        "https://fotos.quixada.ufc.br/_data/i/upload/2024/08/20/20240820162035-f62f6255-xl.jpg",
+      secure_url: "https://example.com/image.jpg",
     });
     Item.create.mockRejectedValue(new Error("Create error"));
 
@@ -210,7 +257,7 @@ describe("ItemController.store", () => {
 
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({
-      error: "Failed to create itemError: Create error",
+      error: "Erro no servidor: Create error",
     });
   });
 });

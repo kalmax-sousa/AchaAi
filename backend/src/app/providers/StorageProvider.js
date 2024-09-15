@@ -42,7 +42,7 @@ class StorageProvider {
 
     await this.deleteOnLocal(path);
 
-    return uploadResult.secure_url;
+    return uploadResult;
   }
 
   async deleteOnLocal(path) {

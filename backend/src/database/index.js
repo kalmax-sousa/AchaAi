@@ -28,12 +28,9 @@ class Database {
 
   async sync() {
     try {
-      if (process.argv[2] === "dbclear") {
+      if (process.argv[2] === "databaseClear") {
         await this.connection.sync({ force: true });
-        console.log("Database Cleared");
-      } else if (process.argv[2] === "dbcreate") {
-        await this.connection.sync();
-        console.log("Connection has been established successfully.");
+        console.log("Database Created/Cleared");
       }
       this.createSuperuser();
     } catch (error) {

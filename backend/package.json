@@ -7,8 +7,7 @@
   "scripts": {
     "test": "jest",
     "dev": "node --experimental-modules --watch --no-warnings src/server.js",
-    "clear": "node --experimental-modules --watch --no-warnings src/server.js dbclear",
-    "create": "node --experimental-modules --watch --no-warnings src/server.js dbcreate",
+    "dbclear": "node --experimental-modules --watch --no-warnings src/server.js databaseClear",
     "lint": "eslint . --config eslint.config.js"
   },
   "author": "",

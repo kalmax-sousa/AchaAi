@@ -39,5 +39,6 @@ router.get("/categories/:id", auth, CategoryController.index);
 router.post("/categories", auth, isAdmin, CategoryController.store);
 router.put("/categories/:id", auth, isAdmin, CategoryController.update);
 router.delete("/categories/:id", auth, isAdmin, CategoryController.delete);
+router.delete("/categories", auth, isAdmin, CategoryController.delete);
 
 export default router;

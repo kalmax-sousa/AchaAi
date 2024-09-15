@@ -102,7 +102,7 @@ class UserController {
           .status(400)
           .json({ message: "Dados inválidos!", errors: error.errors });
       } else {
-        res.status(500).json({ message: "Erro no servidor: " + error });
+        res.status(500).json({ message: "Erro no servidor: " + error.message });
       }
     }
   }

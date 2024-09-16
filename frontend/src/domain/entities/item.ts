@@ -5,7 +5,7 @@ export class Item {
     public description?: string;
     public location: string;
     public imageUrl?: string;
-    public status: ItemStatus;  
+    public status: ItemStatus;      
     public findedAt: Date;
     public expired: boolean;
     public userId: number;

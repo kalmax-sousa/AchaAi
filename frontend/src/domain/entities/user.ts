@@ -10,12 +10,23 @@ export class User {
     private _email: string
     private _name: string
     private _token?: string
+    private _enrollment?: string
 
-    constructor(email: string, name: string, token?: string, id?: string) {
-        this._id = id
+    constructor(email: string, name: string, param3?: string, param4?: string) {
         this._email = email
         this._name = name
-        this._token = token
+        
+        if (param4) {
+            this._token = param3
+            this._id = param4
+        } 
+        else {
+            this._enrollment = param3
+        }
+    }
+
+    get enrollment() {
+        return this._enrollment
     }
 
     get id() {

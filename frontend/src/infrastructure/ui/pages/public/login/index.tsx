@@ -8,12 +8,13 @@ import {
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button, buttonVariants } from "@/components/ui/button"
-import { ReloadIcon } from "@radix-ui/react-icons"
 import { Link } from "react-router-dom"
 import { useLogin } from "./useLogin"
+import { ButtonTooglePasswordVisibility } from "@/infrastructure/ui/components/ButtonTooglePasswordVisibility"
+import { ReloadIcon } from "@radix-ui/react-icons"
 
 const Login = () => {
-    const { login, isLoading, onSubmit } = useLogin()
+    const { login, isLoading, onSubmit, showPassword, togglePasswordVisibility } = useLogin()
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-neutral-900">
@@ -49,12 +50,17 @@ const Login = () => {
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormControl>
-                                            <Input
-                                                type="password"
-                                                autoComplete="current-password"
-                                                placeholder="Senha"
-                                                {...field}
-                                            />
+                                            <div className="relative">
+                                                <Input
+                                                    type={showPassword ? 'text' : 'password'}
+                                                    autoComplete="current-password"
+                                                    placeholder="Senha"
+                                                    className="pr-10"
+                                                    {...field}
+                                                />
+
+                                                <ButtonTooglePasswordVisibility showPassword={showPassword} togglePasswordVisibility={togglePasswordVisibility} />
+                                            </div>
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>

@@ -42,7 +42,7 @@ export const useLogin = () => {
             //toast.success("Login efetuado com sucesso!")
         } catch (error) {
             toast({
-                duration: 2000,
+                duration: 3000,
                 variant: "destructive",
                 title: error + "",
                 description: "Tente novamente",

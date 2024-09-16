@@ -5,6 +5,7 @@ import Register from "../pages/public/register"
 import Home from "../pages/private/Home"
 import PrivateRoutes from "./PrivateRoutes"
 import AutenticatedRoutes from "./AutenticatedRoutes"
+import ConfirmateAccount from "../pages/public/confirmateAccount"
 
 const NotFound: React.FC = () => <h1>404</h1>
 
@@ -20,6 +21,10 @@ export const router = createBrowserRouter([
             {
                 path: "register",
                 element: <Register />
+            },
+            {
+                path: "confirmate-account/:token",
+                element: <ConfirmateAccount />
             }
         ]
     },

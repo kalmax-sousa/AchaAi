@@ -58,4 +58,33 @@ export class UserGateway implements UserRepository {
             throw axiosError;
         }
     }
+
+    async confirmateAccount(token: string): Promise<void> {
+        try {
+            await api.post('session/confirmation', { token })
+        } catch (error) {
+            const axiosError = error as AxiosError;
+            const errors: string[] = []
+        
+            if (axiosError.code === 'ERR_NETWORK') {
+                errors.push('Erro de rede');
+            }
+        
+            if(axiosError.response?.status === 401) {
+                errors.push('Token inválido')
+            } else if(axiosError.response?.status === 200) {
+                errors.push('Email já verificado')
+            } else if(axiosError.response?.status === 400) {
+                errors.push('Falha na validação dos dados')
+            } else {
+                errors.push('Erro desconhecido no servidor')
+            }
+            
+            if (errors.length > 0) {
+              throw new CustomError(errors);
+            }
+        
+            throw axiosError;
+        }
+    }
 }

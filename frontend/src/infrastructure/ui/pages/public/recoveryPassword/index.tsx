@@ -1,36 +1,74 @@
-import { Button, buttonVariants } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useRecoveryPassword } from "./useRecoveryPassword"
 import { ReloadIcon } from "@radix-ui/react-icons"
-import { Link } from "react-router-dom"
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { ButtonTooglePasswordVisibility } from "@/infrastructure/ui/components/ButtonTooglePasswordVisibility"
+import { Button } from "@/components/ui/button"
 
 const RecoveryPassword = () => {
-    const { recoveryPassword, isLoading, onSubmit } = useRecoveryPassword()
+    const {
+        isLoading,
+        showPassword,
+        togglePasswordVisibility,
+        showConfirmPassword,
+        toggleConfirmPasswordVisibility,
+        recoveryPassword,
+        onSubmit
+    } = useRecoveryPassword()
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-neutral-900">
             <Card className="w-[90%] max-w-md shadow-lg rounded-lg dark:bg-zinc-900">
                 <CardHeader>
-                    <CardTitle className="text-center text-lg">ACHA.AI</CardTitle>
-                    <CardDescription className="text-center">Insira seu email para redefinir sua senha</CardDescription>
+                    <CardTitle>Recuperar Senha</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <Form {...recoveryPassword}>
                         <form onSubmit={recoveryPassword.handleSubmit(onSubmit)} className="space-y-6">
                             <FormField
-                                name="email" 
+                                name="password" 
                                 control={recoveryPassword.control}
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormControl>
-                                            <Input
-                                                type="email"
-                                                autoComplete="email"
-                                                placeholder="Email"
-                                                {...field}
-                                            />
+                                            <div className="relative">
+                                                <Input
+                                                    type={showPassword ? 'text' : 'password'}
+                                                    autoComplete="current-password"
+                                                    placeholder="Senha"
+                                                    className="pr-10"
+                                                    {...field}
+                                                />
+
+                                                <ButtonTooglePasswordVisibility showPassword={showPassword} togglePasswordVisibility={togglePasswordVisibility} />
+                                            </div>
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            
+                            <FormField
+                                name="password_confirmation" 
+                                control={recoveryPassword.control}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormControl>
+                                            <div className="relative">
+                                                <Input
+                                                    type={showConfirmPassword ? 'text' : 'password'}
+                                                    autoComplete="current-password"
+                                                    placeholder="Confirmar Senha"
+                                                    className="pr-10"
+                                                    {...field}
+                                                />
+
+                                                <ButtonTooglePasswordVisibility 
+                                                    showPassword={showConfirmPassword} 
+                                                    togglePasswordVisibility={toggleConfirmPasswordVisibility} 
+                                                />
+                                            </div>
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -39,12 +77,8 @@ const RecoveryPassword = () => {
                         
                             <Button className="w-full bg-teal-800 hover:bg-teal-900 transition-colors duration-300 text-white" type="submit" disabled={isLoading}>
                                 {isLoading && <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />}
-                                Enviar
+                                Alterar Senha
                             </Button>
-
-                            <div className="w-full text-center">
-                                <Link to="/auth/login" className={buttonVariants({ variant: "link" })}>Retornar para o login</Link>
-                            </div>
                         </form>
                     </Form>
                 </CardContent>

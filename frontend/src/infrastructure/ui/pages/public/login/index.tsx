@@ -70,7 +70,7 @@ const Login = () => {
                             </FormField>
 
                             <div className="w-full text-right">
-                                <Link to="/" className={buttonVariants({ variant: "link" })}>Esqueceu a senha?</Link>
+                                <Link to="/auth/recovery-password" className={buttonVariants({ variant: "link" })}>Esqueceu a senha?</Link>
                             </div>
                         
                             <Button className="w-full bg-teal-800 hover:bg-teal-900 transition-colors duration-300 text-white" type="submit" disabled={isLoading}>

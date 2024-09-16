@@ -1,6 +1,6 @@
-import { ConfirmateAccount } from "@/application/usecase/confirmateAccouunt"
+import { ConfirmateAccount } from "@/application/usecase/confirmateAccount"
 import { CustomError } from "@/domain/entities/error"
-import { UserGateway } from "@/infrastructure/gateways/userGateway"
+import { AuthGateway } from "@/infrastructure/gateways/authGateway"
 import { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 
@@ -18,8 +18,8 @@ export const useConfirmateAccount = () => {
     const handleConfirmateAccount = async () => {
         if (token) {
             setIsLoading(true)
-            const userRepository = new UserGateway();
-            const confirmateAccount = new ConfirmateAccount(userRepository);
+            const authRepository = new AuthGateway()
+            const confirmateAccount = new ConfirmateAccount(authRepository)
 
             try{
                 await confirmateAccount.execute(token)

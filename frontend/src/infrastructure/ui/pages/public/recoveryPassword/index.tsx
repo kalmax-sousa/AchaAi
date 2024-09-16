@@ -1,0 +1,56 @@
+import { Button, buttonVariants } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form"
+import { useRecoveryPassword } from "./useRecoveryPassword"
+import { ReloadIcon } from "@radix-ui/react-icons"
+import { Link } from "react-router-dom"
+import { Input } from "@/components/ui/input"
+
+const RecoveryPassword = () => {
+    const { recoveryPassword, isLoading, onSubmit } = useRecoveryPassword()
+
+    return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-neutral-900">
+            <Card className="w-[90%] max-w-md shadow-lg rounded-lg dark:bg-zinc-900">
+                <CardHeader>
+                    <CardTitle className="text-center text-lg">ACHA.AI</CardTitle>
+                    <CardDescription className="text-center">Insira seu email para redefinir sua senha</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Form {...recoveryPassword}>
+                        <form onSubmit={recoveryPassword.handleSubmit(onSubmit)} className="space-y-6">
+                            <FormField
+                                name="email" 
+                                control={recoveryPassword.control}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormControl>
+                                            <Input
+                                                type="email"
+                                                autoComplete="email"
+                                                placeholder="Email"
+                                                {...field}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        
+                            <Button className="w-full bg-teal-800 hover:bg-teal-900 transition-colors duration-300 text-white" type="submit" disabled={isLoading}>
+                                {isLoading && <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />}
+                                Enviar
+                            </Button>
+
+                            <div className="w-full text-center">
+                                <Link to="/auth/login" className={buttonVariants({ variant: "link" })}>Retornar para o login</Link>
+                            </div>
+                        </form>
+                    </Form>
+                </CardContent>
+            </Card>
+        </div>
+    )
+}
+
+export default RecoveryPassword

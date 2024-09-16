@@ -1,6 +1,6 @@
 import { AuthenticateUser } from "@/application/usecase/autenticateUser"
 import { useToast } from "@/hooks/use-toast"
-import { UserGateway } from "@/infrastructure/gateways/userGateway"
+import { AuthGateway } from "@/infrastructure/gateways/authGateway"
 import { useAuth } from "@/infrastructure/ui/context/AuthContext"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useState } from "react"
@@ -33,8 +33,8 @@ export const useLogin = () => {
 
     const onSubmit = async (data: z.infer<typeof formLoginSchema>) => {
         setIsLoading(true);
-        const userRepository = new UserGateway();
-        const authenticateUser = new AuthenticateUser(userRepository);
+        const authRepository = new AuthGateway();
+        const authenticateUser = new AuthenticateUser(authRepository);
         
         try {
             const user = await authenticateUser.execute(data.email, data.password)

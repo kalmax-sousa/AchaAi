@@ -4,10 +4,10 @@ import {
     FormField, 
     FormItem,
     FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button, buttonVariants } from "@/components/ui/button"
+} from "@/infrastructure/ui/components/form"
+import { Input } from "@/infrastructure/ui/components/input"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/infrastructure/ui/components/card"
+import { Button, buttonVariants } from "@/infrastructure/ui/components/button"
 import { Link } from "react-router-dom"
 import { useLogin } from "./useLogin"
 import { ButtonTooglePasswordVisibility } from "@/infrastructure/ui/components/ButtonTooglePasswordVisibility"

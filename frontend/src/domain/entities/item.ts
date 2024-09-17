@@ -1,9 +1,10 @@
-type ItemStatus = "DELIVERED" | "LOST_AND_FOUND" | "WITH_FINDER";
+export type ItemStatus = "DELIVERED" | "LOST_AND_FOUND" | "WITH_FINDER";
 
 export class Item {
+    public id: string
     public name: string;
     public description?: string;
-    public location: string;
+    public  location: string;
     public imageUrl?: string;
     public status: ItemStatus;      
     public findedAt: Date;
@@ -12,6 +13,7 @@ export class Item {
     public categoryId: number;
 
     constructor(
+        id: string,
         name: string,
         location: string,
         userId: number,
@@ -22,17 +24,18 @@ export class Item {
         description?: string,
         imageUrl?: string
     ) {
-        this.name = name;
-        this.description = description;
-        this.location = location;
-        this.imageUrl = imageUrl;
-        this.status = status;
-        this.findedAt = findedAt;
-        this.expired = expired;
-        this.userId = userId;
-        this.categoryId = categoryId;
+        this.id = id
+        this.name = name
+        this.description = description
+        this.location = location
+        this.imageUrl = imageUrl
+        this.status = status
+        this.findedAt = findedAt
+        this.expired = expired
+        this.userId = userId
+        this.categoryId = categoryId
     }
-
+/*
     // Método para alterar o status do item
     updateStatus(newStatus: ItemStatus): void {
         this.status = newStatus;
@@ -64,5 +67,5 @@ export class Item {
     updateLocation(newLocation: string): void {
         if (!newLocation) throw new Error("A nova localização não pode ser vazia.");
         this.location = newLocation;
-    }
+    }*/
 }

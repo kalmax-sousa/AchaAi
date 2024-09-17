@@ -8,7 +8,8 @@ export class AuthGateway implements AuthRepository {
     async authenticate(email: string, password: string): Promise<User> {
         try {
             const response = await api.post('/session', { email, password })
-            const user = new User(response.data.email, response.data.name, response.data.token, response.data.id)
+            console.log(response)
+            const user = new User(response.data.user.email, response.data.user.name, response.data.token, response.data.user.id, response.data.user.image_url)
             return user
         } catch (error) {
             const axiosError = error as AxiosError

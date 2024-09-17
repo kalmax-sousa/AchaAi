@@ -1,6 +1,6 @@
 import { CreateUser } from "@/application/usecase/createUser"
 import { CustomError } from "@/domain/entities/error"
-import { useToast } from "@/hooks/use-toast"
+import { useToast } from "@/infrastructure/ui/hooks/use-toast"
 import { UserGateway } from "@/infrastructure/gateways/userGateway"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useState } from "react"

@@ -1,27 +1,23 @@
 import { Button, buttonVariants } from "@/infrastructure/ui/components/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/infrastructure/ui/components/card"
-import { Form, FormControl, FormField, FormItem, FormMessage } from "@/infrastructure/ui/components/form"
-import { ReloadIcon } from "@radix-ui/react-icons"
-import { Link } from "react-router-dom"
+import { FormControl, FormField, FormItem, FormMessage } from "@/infrastructure/ui/components/form"
 import { Input } from "@/infrastructure/ui/components/input"
-import { useSendRecoveryPassword } from "./useRecoveryPassword"
+import { Link } from "react-router-dom"
+import { Form } from "react-router-dom"
 
-const SendRecoveryPassword = () => {
-    const { sendRecoveryPassword, isLoading, onSubmit } = useSendRecoveryPassword()
-
-    return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-neutral-900">
-            <Card className="w-[90%] max-w-md shadow-lg rounded-lg dark:bg-zinc-900">
+const CreateItem = () => {
+    return(
+        <Card className="w-[90%] max-w-md shadow-lg rounded-lg dark:bg-zinc-900">
                 <CardHeader>
                     <CardTitle className="text-center text-lg">ACHA.AI</CardTitle>
-                    <CardDescription className="text-center">Insira seu email para redefinir sua senha</CardDescription>
+                    <CardDescription className="text-center">Faça login para continuar</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <Form {...sendRecoveryPassword}>
-                        <form onSubmit={sendRecoveryPassword.handleSubmit(onSubmit)} className="space-y-6">
+                    <Form {...login}>
+                        <form onSubmit={login.handleSubmit(onSubmit)} className="space-y-6">
                             <FormField
                                 name="email" 
-                                control={sendRecoveryPassword.control}
+                                control={login.control}
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormControl>
@@ -39,18 +35,17 @@ const SendRecoveryPassword = () => {
                         
                             <Button className="w-full bg-teal-800 hover:bg-teal-900 transition-colors duration-300 text-white" type="submit" disabled={isLoading}>
                                 {isLoading && <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />}
-                                Enviar
+                                Entrar
                             </Button>
 
                             <div className="w-full text-center">
-                                <Link to="/auth/login" className={buttonVariants({ variant: "link" })}>Retornar para o login</Link>
+                                <Link to="/auth/register" className={buttonVariants({ variant: "link" })}>Criar conta</Link>
                             </div>
                         </form>
                     </Form>
                 </CardContent>
             </Card>
-        </div>
     )
 }
 
-export default SendRecoveryPassword
+export default CreateItem

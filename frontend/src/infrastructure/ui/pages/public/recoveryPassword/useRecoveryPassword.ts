@@ -1,6 +1,6 @@
 import { RecoveryPassword } from "@/application/usecase/recoveryPassword"
 import { CustomError } from "@/domain/entities/error"
-import { toast } from "@/hooks/use-toast"
+import { toast } from "@/infrastructure/ui/hooks/use-toast"
 import { UserGateway } from "@/infrastructure/gateways/userGateway"
 import { zodResolver } from "@hookform/resolvers/zod"
 import {  useState } from "react"

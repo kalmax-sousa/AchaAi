@@ -1,4 +1,4 @@
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent } from "@/infrastructure/ui/components/card"
 import { useConfirmateAccount } from "./useConfirmateAccount"
 import { CheckCircledIcon, CrossCircledIcon, ReloadIcon } from "@radix-ui/react-icons"
 

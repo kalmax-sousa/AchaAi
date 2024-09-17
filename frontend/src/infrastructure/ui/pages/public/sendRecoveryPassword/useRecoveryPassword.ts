@@ -1,5 +1,5 @@
 import { SendRecoveryPassword } from "@/application/usecase/sendRecoveryPassword"
-import { toast } from "@/hooks/use-toast"
+import { toast } from "@/infrastructure/ui/hooks/use-toast"
 import { AuthGateway } from "@/infrastructure/gateways/authGateway"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useState } from "react"

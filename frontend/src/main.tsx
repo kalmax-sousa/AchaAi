@@ -6,7 +6,7 @@ import { router } from './infrastructure/ui/routes'
 import AuthProvider from './infrastructure/ui/context/AuthContext'
 import { Bounce, ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css';
-import { Toaster } from './components/ui/toaster'
+import { Toaster } from './infrastructure/ui/components/toaster'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

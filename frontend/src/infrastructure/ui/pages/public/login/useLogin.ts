@@ -1,5 +1,5 @@
 import { AuthenticateUser } from "@/application/usecase/autenticateUser"
-import { useToast } from "@/hooks/use-toast"
+import { useToast } from "@/infrastructure/ui/hooks/use-toast"
 import { AuthGateway } from "@/infrastructure/gateways/authGateway"
 import { useAuth } from "@/infrastructure/ui/context/AuthContext"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -38,6 +38,7 @@ export const useLogin = () => {
         
         try {
             const user = await authenticateUser.execute(data.email, data.password)
+            console.log(user)
             loginContext(user)
             //toast.success("Login efetuado com sucesso!")
         } catch (error) {

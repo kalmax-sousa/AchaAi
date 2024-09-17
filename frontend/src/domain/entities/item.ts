@@ -4,13 +4,13 @@ export class Item {
     public id: string
     public name: string;
     public description?: string;
-    public  location: string;
-    public imageUrl?: string;
+    public location: string;
+    public image_url?: string;
     public status: ItemStatus;      
     public findedAt: Date;
     public expired: boolean;
     public userId: number;
-    public categoryId: number;
+    public category_id: number;
 
     constructor(
         id: string,
@@ -28,12 +28,12 @@ export class Item {
         this.name = name
         this.description = description
         this.location = location
-        this.imageUrl = imageUrl
+        this.image_url = imageUrl
         this.status = status
         this.findedAt = findedAt
         this.expired = expired
         this.userId = userId
-        this.categoryId = categoryId
+        this.category_id = categoryId
     }
 /*
     // Método para alterar o status do item

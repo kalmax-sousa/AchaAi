@@ -55,7 +55,7 @@ export const useCreateItem = () => {
         }
     })
 
-    const onSubmit = async (data: z.infer<typeof formCreateItemSchema>) => {
+    const onSubmit = async () => {
         setIsLoading(true);
         
         try {

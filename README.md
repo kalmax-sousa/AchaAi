@@ -42,8 +42,8 @@ O Ache AI oferece uma solução digital que permite:
 </sub></sup>
 
 ## Tecnologias Utilizadas
-- **React** para o front-end.
-- **Node.js com Express** para o back-end.
+- **React** para o front-end usando o Cypress para testes automatizados.
+- **Node.js com Express** para o back-end usando o Jest para testes unitários.
 - **Sequelize** como ORM para interação com o **PostgreSQL**.
 - **Figma** para design de interface.
 

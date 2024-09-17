@@ -36,7 +36,8 @@ O Ache AI oferece uma solução digital que permite:
 
 ## Arquitetura do Projeto
 
-![Arquitetura](docs/architecture.png)
+![Arquitetura](docs/Front-end.png)
+![Arquitetura](docs/backend.png)
 <sup><sub>PS.: Durante Sessões colaborativas com a equipe, foi deliberada a alteração da arquitetura do sistema. As tecnologias do backend foram repensadas para o Node.js com Express. Imagem sofrerá alteração posteriormente.
 </sub></sup>
 

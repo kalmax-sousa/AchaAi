@@ -26,7 +26,7 @@ describe('Login Test', () => {
       cy.intercept('POST', '/api/auth/login', {
           statusCode: 401,
           body: {
-              message: 'Invalid credentials',
+              message: 'Email ou senha inválido',
           },
       }).as('loginRequest')
 
@@ -34,6 +34,6 @@ describe('Login Test', () => {
       cy.get('input[name="password"]').type('wrongpassword')
 
       cy.get('button[type="submit"]').click()
-      cy.get('.error-message').should('contain', 'Invalid credentials')
+      cy.contains('Email ou senha inválidos').should('be.visible');
   })
 })

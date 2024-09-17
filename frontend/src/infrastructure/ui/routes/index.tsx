@@ -8,6 +8,7 @@ import AutenticatedRoutes from "./AutenticatedRoutes"
 import ConfirmateAccount from "../pages/public/confirmateAccount"
 import SendRecoveryPassword from "../pages/public/sendRecoveryPassword"
 import RecoveryPassword from "../pages/public/recoveryPassword"
+import CreateItem from "../pages/private/createItem"
 
 const NotFound: React.FC = () => <h1>404</h1>
 
@@ -45,6 +46,10 @@ export const router = createBrowserRouter([
             {
                 path: "",
                 element: <Home />
+            },
+            {
+                path: "/item/create",
+                element: <CreateItem />
             }
         ]
     },

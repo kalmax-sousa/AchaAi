@@ -2,32 +2,36 @@ type UserJsonProps = {
     id: string
     name: string
     email: string
+    token: string
+    image_url: string
 }
 
 export class User {
-    private _id?: string
-    private _email: string
-    private _name: string
+    id?: string
+    email: string
+    name: string
+    token?: string
+    enrollment?: string
+    image_url?: string
 
-    constructor(email: string, name: string, id?: string,) {
-        this._id = id
-        this._email = email
-        this._name = name
+    constructor(email: string, name: string, param3?: string, param4?: string, image_url?: string) {
+        this.email = email
+        this.name = name
+        this.image_url = image_url
+
+        if (image_url) {
+            this.token = param3
+            this.id = param4
+            this.image_url = image_url
+        } else if (param4) {
+            this.token = param3
+            this.id = param4
+        } else {
+            this.enrollment = param3
+        }
     }
 
-    get id() {
-        return this._id
-    }
-
-    get email() {
-        return this._email
-    }
-
-    get name() {
-        return this._name
-    }
-
-    static fromJson({ id, name, email }: UserJsonProps): User {
-        return new User(email, name, id)
+    static fromJson({ id, name, email, token, image_url }: UserJsonProps): User {
+        return new User(email, name, token, id, image_url)
     }
 }

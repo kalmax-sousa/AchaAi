@@ -20,9 +20,11 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const login = async (userData: User): Promise<void> => {
         try {
-            const response = { data: userData }; // Chamada API simulada
+            const response = { data: userData }
             setUser(response.data);
             localStorage.setItem('user', JSON.stringify(response.data));
+            const user:User = response.data
+            localStorage.setItem('token', user?.token || "");
         } catch (error) {
             console.error('Erro ao fazer login:', error);
         }

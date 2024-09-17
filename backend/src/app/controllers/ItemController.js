@@ -11,40 +11,48 @@ class ItemController {
     try {
       const { category, query } = req.body;
 
-      if (query.status === "DELIVERED" || query.expired) {
-        return res.status(401).json({ error: "Permissão negada" });
+      let items
+      
+      if(category && query){
+        if (query?.status === "DELIVERED" || query?.expired) {
+          return res.status(401).json({ error: "Permissão negada" });
+        }
+        items = await Item.findAll({
+          where: {
+            name: { [Op.iLike]: `%${query?.name ?? ""}%` },
+            location: { [Op.iLike]: `%${query?.location ?? ""}%` },
+            description: { [Op.iLike]: `%${query?.description ?? ""}%` },
+            status: query?.status ?? {
+              [Op.or]: ["LOST_AND_FOUND", "WITH_FINDER"],
+            },
+            finded_at: query?.finded_at
+              ? new Date(query?.finded_at)
+              : {
+                  [Op.gte]: new Date("1970-01-01"),
+                },
+            expired: query?.expired ?? {
+              [Op.or]: [false, null, true],
+            },
+            category_id: category ? { [Op.eq]: category } : "",
+          },
+          include: [
+            {
+              model: User,
+              as: "user",
+              attributes: ["id", "name"],
+            },
+            {
+              model: Category,
+              as: "category",
+              attributes: ["id", "name"],
+            },
+          ],
+        });
+      } else {
+        items = await Item.findAll()
+
       }
-      const items = await Item.findAll({
-        where: {
-          name: { [Op.iLike]: `%${query.name ?? ""}%` },
-          location: { [Op.iLike]: `%${query.location ?? ""}%` },
-          description: { [Op.iLike]: `%${query.description ?? ""}%` },
-          status: query.status ?? {
-            [Op.or]: ["LOST_AND_FOUND", "WITH_FINDER"],
-          },
-          finded_at: query.finded_at
-            ? new Date(query.finded_at)
-            : {
-                [Op.gte]: new Date("1970-01-01"),
-              },
-          expired: query.expired ?? {
-            [Op.or]: [false, null, true],
-          },
-          category_id: category ? { [Op.eq]: category } : "",
-        },
-        include: [
-          {
-            model: User,
-            as: "user",
-            attributes: ["id", "name"],
-          },
-          {
-            model: Category,
-            as: "category",
-            attributes: ["id", "name"],
-          },
-        ],
-      });
+
       return res.json(items);
     } catch (error) {
       return res
